@@ -1,0 +1,101 @@
+------------------------------------------------------------
+Timing Analyzer Summary
+------------------------------------------------------------
+
+Type  : Slow 1200mV 85C Model Setup 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : -5.192
+TNS   : -113.221
+
+Type  : Slow 1200mV 85C Model Setup 'CLOCK_50'
+Slack : 11.923
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Hold 'CLOCK_50'
+Slack : 0.344
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Hold 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.391
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.591
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.848
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'LCD_DCLK'
+Slack : 26.093
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'TOUCH_I2C_SCL'
+Slack : 6245.790
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Setup 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : -1.848
+TNS   : -33.859
+
+Type  : Slow 1200mV 0C Model Setup 'CLOCK_50'
+Slack : 12.670
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Hold 'CLOCK_50'
+Slack : 0.310
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Hold 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.351
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.593
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.839
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'LCD_DCLK'
+Slack : 26.093
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'TOUCH_I2C_SCL'
+Slack : 6245.790
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Setup 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 12.913
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Setup 'CLOCK_50'
+Slack : 16.051
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Hold 'CLOCK_50'
+Slack : 0.099
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Hold 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.176
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.242
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'iLCDgenerator|iLCDpll|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.903
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'LCD_DCLK'
+Slack : 26.303
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'TOUCH_I2C_SCL'
+Slack : 6246.000
+TNS   : 0.000
+
+------------------------------------------------------------

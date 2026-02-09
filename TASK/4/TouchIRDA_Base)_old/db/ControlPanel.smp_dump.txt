@@ -1,0 +1,50 @@
+
+State Machine - |Demo_ControlPanel|UserInterfaceV2:iUserInterface|VeekMT2_IRDAv2:iIRDA|last_state
+Name last_state.WAIT_FOR_REPEAT_CONFIRM last_state.WAIT_RESET_REPEAT_DELAY last_state.WAIT_FOR_CONFIRM last_state.SEND_PACKET last_state.PROCESS_PACKET last_state.READ_DATA_CR last_state.READ_DATA last_state.WAIT_FOR_REPEAT_CR last_state.WAIT_FOR_HEADER_CR last_state.WAIT_FOR_HEADER last_state.IDLE 
+last_state.IDLE 0 0 0 0 0 0 0 0 0 0 0 
+last_state.WAIT_FOR_HEADER 0 0 0 0 0 0 0 0 0 1 1 
+last_state.WAIT_FOR_HEADER_CR 0 0 0 0 0 0 0 0 1 0 1 
+last_state.WAIT_FOR_REPEAT_CR 0 0 0 0 0 0 0 1 0 0 1 
+last_state.READ_DATA 0 0 0 0 0 0 1 0 0 0 1 
+last_state.READ_DATA_CR 0 0 0 0 0 1 0 0 0 0 1 
+last_state.PROCESS_PACKET 0 0 0 0 1 0 0 0 0 0 1 
+last_state.SEND_PACKET 0 0 0 1 0 0 0 0 0 0 1 
+last_state.WAIT_FOR_CONFIRM 0 0 1 0 0 0 0 0 0 0 1 
+last_state.WAIT_RESET_REPEAT_DELAY 0 1 0 0 0 0 0 0 0 0 1 
+last_state.WAIT_FOR_REPEAT_CONFIRM 1 0 0 0 0 0 0 0 0 0 1 
+
+State Machine - |Demo_ControlPanel|UserInterfaceV2:iUserInterface|VeekMT2_IRDAv2:iIRDA|state
+Name state.WAIT_FOR_REPEAT_CONFIRM state.WAIT_RESET_REPEAT_DELAY state.WAIT_FOR_CONFIRM state.SEND_PACKET state.PROCESS_PACKET state.READ_DATA_CR state.READ_DATA state.WAIT_FOR_REPEAT_CR state.WAIT_FOR_HEADER_CR state.WAIT_FOR_HEADER state.IDLE 
+state.IDLE 0 0 0 0 0 0 0 0 0 0 0 
+state.WAIT_FOR_HEADER 0 0 0 0 0 0 0 0 0 1 1 
+state.WAIT_FOR_HEADER_CR 0 0 0 0 0 0 0 0 1 0 1 
+state.WAIT_FOR_REPEAT_CR 0 0 0 0 0 0 0 1 0 0 1 
+state.READ_DATA 0 0 0 0 0 0 1 0 0 0 1 
+state.READ_DATA_CR 0 0 0 0 0 1 0 0 0 0 1 
+state.PROCESS_PACKET 0 0 0 0 1 0 0 0 0 0 1 
+state.SEND_PACKET 0 0 0 1 0 0 0 0 0 0 1 
+state.WAIT_FOR_CONFIRM 0 0 1 0 0 0 0 0 0 0 1 
+state.WAIT_RESET_REPEAT_DELAY 0 1 0 0 0 0 0 0 0 0 1 
+state.WAIT_FOR_REPEAT_CONFIRM 1 0 0 0 0 0 0 0 0 0 1 
+
+State Machine - |Demo_ControlPanel|UserInterfaceV2:iUserInterface|VeekMT2_I2CtouchLCD:iTouch|i2c_touch_config_v2:iTouch|c_state
+Name c_state.1001 c_state.1000 c_state.0111 c_state.0110 c_state.0101 c_state.0100 c_state.0011 c_state.0010 c_state.0001 c_state.0000 
+c_state.0000 0 0 0 0 0 0 0 0 0 0 
+c_state.0001 0 0 0 0 0 0 0 0 1 1 
+c_state.0010 0 0 0 0 0 0 0 1 0 1 
+c_state.0011 0 0 0 0 0 0 1 0 0 1 
+c_state.0100 0 0 0 0 0 1 0 0 0 1 
+c_state.0101 0 0 0 0 1 0 0 0 0 1 
+c_state.0110 0 0 0 1 0 0 0 0 0 1 
+c_state.0111 0 0 1 0 0 0 0 0 0 1 
+c_state.1000 0 1 0 0 0 0 0 0 0 1 
+c_state.1001 1 0 0 0 0 0 0 0 0 1 
+
+State Machine - |Demo_ControlPanel|UserInterfaceV2:iUserInterface|VeekMT2_I2CtouchLCD:iTouch|i2c_touch_config_v2:iTouch|i2c_master_byte_ctrl:byte_controller|c_state
+Name c_state.ST_IDLE c_state.ST_STOP c_state.ST_ACK c_state.ST_WRITE c_state.ST_READ c_state.ST_START 
+c_state.ST_IDLE 0 0 0 0 0 0 
+c_state.ST_START 1 0 0 0 0 1 
+c_state.ST_READ 1 0 0 0 1 0 
+c_state.ST_WRITE 1 0 0 1 0 0 
+c_state.ST_ACK 1 0 1 0 0 0 
+c_state.ST_STOP 1 1 0 0 0 0 

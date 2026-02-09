@@ -38,6 +38,7 @@ LSP/
 │   ├── 1/                          # Task 1
 │   ├── 2/task2/                    # Task 2 (Quartus)
 │   ├── 3/                          # Task 3
+│   ├── 4/                          # Task 4 (FSM)
 │   └── STUDOCU/                    # Studocu materials
 │
 ├── WEEK1-13/                       # 📖 Weekly notes

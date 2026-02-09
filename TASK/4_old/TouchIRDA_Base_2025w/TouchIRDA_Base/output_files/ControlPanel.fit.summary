@@ -1,0 +1,16 @@
+Fitter Status : Successful - Tue Dec 16 01:49:08 2025
+Quartus Prime Version : 23.1std.1 Build 993 05/14/2024 SC Lite Edition
+Revision Name : ControlPanel
+Top-level Entity Name : Demo_ControlPanel
+Family : Cyclone IV E
+Device : EP4CE115F29C7
+Timing Models : Final
+Total logic elements : 2,216 / 114,480 ( 2 % )
+    Total combinational functions : 1,802 / 114,480 ( 2 % )
+    Dedicated logic registers : 925 / 114,480 ( < 1 % )
+Total registers : 925
+Total pins : 41 / 529 ( 8 % )
+Total virtual pins : 0
+Total memory bits : 65,536 / 3,981,312 ( 2 % )
+Embedded Multiplier 9-bit elements : 14 / 532 ( 3 % )
+Total PLLs : 1 / 4 ( 25 % )

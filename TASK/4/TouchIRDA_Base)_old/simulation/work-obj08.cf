@@ -1,0 +1,19 @@
+v 4
+file . "../testbenchV2_ControlPanel.vhd" "2e9ca7e1ee70e5b94659610aca6f747e06728c6d" "20251125153421.151":
+  entity testbenchv2_controlpanel at 16( 774) + 0 on 21;
+  architecture testbench of testbenchv2_controlpanel at 24( 1038) + 0 on 22;
+file . "../LCDlogicTask4.vhd" "9e305578a4d3f584036eb5683f6cd100c312b782" "20251125153420.974":
+  entity lcdlogictask4 at 5( 226) + 0 on 17;
+  architecture rtl of lcdlogictask4 at 25( 1362) + 0 on 18;
+file . "../TouchIRDApackV2.vhd" "59eb3a66aacb3d6c3207e6a07cb5aac5442ee008" "20251125153420.773":
+  package touchirdapackv2 at 9( 534) + 0 on 13 body;
+  package body touchirdapackv2 at 59( 3485) + 0 on 14;
+file . "../LCDpackV2.vhd" "f7e6b684dd4cddc4610dd277662b7be11e2d79e3" "20251125153420.478":
+  package lcdpackv2 at 11( 653) + 0 on 11 body;
+  package body lcdpackv2 at 98( 4484) + 0 on 12;
+file . "../UIpack.vhd" "ca6d7b609a74579f0b5ce4b19f4abe36e64a00f6" "20251125153420.925":
+  package uipack at 8( 522) + 0 on 15;
+  package body uipack at 24( 1105) + 0 on 16;
+file . "../LCDlogic4testbench.vhd" "e71c3efc615ac054cd44ab1a16b2e53f76eee422" "20251125153421.065":
+  entity lcdlogic4testbench at 5( 268) + 0 on 19;
+  architecture rtl of lcdlogic4testbench at 20( 1183) + 0 on 20;

@@ -1,0 +1,28 @@
+v 4
+file . "../testbenchV2_ControlPanel.vhd" "569bb060458fd95acfaaeb0d6e59ac43925b8671" "20251226195141.095":
+  entity testbenchv2_controlpanel at 16( 774) + 0 on 1873;
+  architecture testbench of testbenchv2_controlpanel at 24( 1038) + 0 on 1874;
+file . "../LCDlogicTask4.vhd" "6b63663cf411651c9d0f54dad4185c26185544cd" "20251226195140.929":
+  entity lcdlogictask4 at 6( 247) + 0 on 1869;
+  architecture rtl of lcdlogictask4 at 29( 1584) + 0 on 1870;
+file . "../TouchIRDApackV2.vhd" "59eb3a66aacb3d6c3207e6a07cb5aac5442ee008" "20251226195140.794":
+  package touchirdapackv2 at 9( 534) + 0 on 1865 body;
+  package body touchirdapackv2 at 59( 3485) + 0 on 1866;
+file . "../LCDpackV2.vhd" "7ab7a11c2d71e4af8f2d3874956568b8ba837d4b" "20251226195139.991":
+  package lcdpackv2 at 11( 653) + 0 on 1857 body;
+  package body lcdpackv2 at 109( 5125) + 0 on 1858;
+file . "../UIpack.vhd" "7df8cf1abe5062d7f06b3d89769bd59c3c72e671" "20251226195140.891":
+  package uipack at 8( 522) + 0 on 1867;
+  package body uipack at 88( 3900) + 0 on 1868;
+file . "../H_Star.vhd" "792285a4e9bb4396224a622ec62945ab85ccbaff" "20251226195140.076":
+  entity h_star at 11( 674) + 0 on 1859;
+  architecture rtl of h_star at 18( 945) + 0 on 1860;
+file . "../LCDlogic4testbench.vhd" "ec1946050b1ed35ac3f2a97ec1739a063c8ce28a" "20251226195141.027":
+  entity lcdlogic4testbench at 1( 0) + 0 on 1871;
+  architecture rtl of lcdlogic4testbench at 16( 462) + 0 on 1872;
+file . "../Morse_ywz.vhd" "b71f0b881276ec3f25cb3f550b178c92b4dabccf" "20251226195140.710":
+  entity morseywz at 1( 0) + 0 on 1863;
+  architecture behavioral of morseywz at 6( 247) + 0 on 1864;
+file . "../Morse_Text_YUANW.vhd" "e4b80cea228ba475e71c0be3d969818970155d07" "20251226195140.488":
+  entity morse_text_yuanw at 11( 610) + 0 on 1861;
+  architecture rtl of morse_text_yuanw at 18( 891) + 0 on 1862;

@@ -1,0 +1,208 @@
+-----------------------------------
+-- User interface version V2.B (simplified).  
+-- It separates the processing of user inputs, 
+-- so we can simulate LCDlogicTask4 using LCDlogicTask4testbench.vhd.  
+-- UserInterfaceV2.vhd 
+---------------------------------------------------------
+library ieee, work;use ieee.std_logic_1164.all;use ieee.numeric_std.all;
+use work.LCDpackV2.all;         -- VeekMT2_LCDgenV2 definitions
+use work.TouchIRDApackV2.all;   -- Touch and IRDA modules
+use work.UIpack.all;      -- user's definitions related to this solution
+
+entity UserInterfaceV2 is
+  generic(IRDA_REPEAT_WAIT_MS : natural := 500);
+  -- IRDA_REPEAT_WAIT_MS parameter specifies the waiting time in ms 
+  -- before sending the repetition of a pressed key on an IRDA remote control.
+ 
+ port(IRDA_RXD         : in    std_logic      := '0'; -- VeekMT2 board pin: InfraRed sensor 
+       TOUCH_INT_n      : in    std_logic      := '0'; -- VeekMT2 board pin: LCD screen interrupt announced new coordinates
+       CLOCK_50         : in    std_logic      := '0'; -- VeekMT2 board pin: 50 MHz clock
+       -- VeekMT2_LCDgenV2 generator output signals
+       LCD_DCLK         : in    std_logic      := '0'; -- LCD data clock, 33 MHz exactly
+       YEND_N           : in    std_logic      := '0'; -- '0' when the last yrow
+       CLRN             : in    std_logic      := '0'; -- connect to VeekMT2_genV2 pin
+       -- I2C bus of Touch Module
+       TOUCH_I2C_SDA    : inout std_logic      := '0'; -- VeekMT2 board pin: I2C data
+       TOUCH_I2C_SCL    : out   std_logic      := '0'; -- VeekMT2 board pin: I2C clock (cca 160 kHz) active only when sending data
+       -- to LCD logic
+       touchCoordinates : out   TouchDataSlv_t := (others => '0'); -- coordinates packed into std_logic_vector 
+       commandStop        : out   std_logic:='0'; -- stop blinking
+       -- morse output signals
+       MORSE_INDEX     : out   integer range 0 to 63 := 0; -- Current Morse code index
+       CURRENT_SPEED  : out   integer range 0 to 16 := 5  -- Current speed
+       ); 
+end entity;
+
+architecture rtl of UserInterfaceV2 is
+  -- The touch screen data processing
+  signal touchDataSlv      : TouchDataSlv_t                := (others => '0');
+  -- IRDA RDY-ACK protocol signals
+  signal RDY_command       : std_logic                     := '0'; -- RDY-ACK handshake signal
+  signal ACK_Command       : std_logic                     := '0'; -- RDY-ACK handshake signal
+  signal AddressCommand    : std_logic_vector(15 downto 0) := (others => '0'); -- received IRDA data
+  -- AddressCommand(15 downto 8) part contains a constant value, the identification of IRDA remote control, 
+  -- AddressCommand(7 downto 0) part contains the code of a pressed remote key
+
+  -- Signals for Morse code control(shared with the process)
+  signal s_morse_speed     : integer range 0 to 16 := 5; -- internal Morse code speed(default 5, Max 16)
+  signal s_vStop         : std_logic := '0'; -- internal stop signal
+  signal s_morse_current_index : integer range 0 to 63 := 0; -- internal current index only for YEND_N process
+
+ begin
+  -- Inserting the instance of the I2C bus module for LCD Touches
+ iTouch : entity work.VeekMT2_I2CTouchLCD
+            port map(
+              CLOCK_50      => CLOCK_50,
+              LCD_DCLK      => LCD_DCLK,
+              CLRN          => CLRN,
+              RDY_N         => open,
+              TouchData     => touchDataSlv,
+              TOUCH_INT_n   => TOUCH_INT_n,
+              TOUCH_I2C_SDA => TOUCH_I2C_SDA,
+              TOUCH_I2C_SCL => TOUCH_I2C_SCL
+            );
+    
+	 touchCoordinates <= touchDataSlv;     -- we are copying them to LCDlogicTask4
+
+  -- Inserting the instance of the IRDA module ----------------------------------
+  iIRDA : entity work.VeekMT2_IRDAv2
+          generic map(IRDA_REPEAT_WAIT_MS => IRDA_REPEAT_WAIT_MS)
+          port map(
+            LCD_DCLK       => LCD_DCLK,
+            CLRN           => CLRN,
+            IRDA_RXD       => IRDA_RXD,
+            AddressCommand => AddressCommand,
+            RDY_Command    => RDY_Command,
+            ACK_Command    => ACK_Command,
+            CmdIsRepeated  => open,
+            IRDA_active    => open
+          );
+  MORSE_INDEX      <= s_morse_current_index;
+  CURRENT_SPEED   <= s_morse_speed;
+
+  -- !!! All memorizable values must be assigned only inside tests of rising/falling edge of a clock.
+  iReadTouchIrda : process(LCD_DCLK, YEND_N)
+  
+    variable Command     : std_logic_vector(7 downto 0)  := (others => '0'); -- key code from IRDA
+    variable isRDYWaiting:boolean:=false; -- FSM state: true - we wait for RDY, false sending ACK
+--------------------------------------------------------------------------------------------
+    variable touchRecord : TouchRecord_t    := TouchRecord_ZERO; -- defined in TouchIRDApackV2
+    variable isTouch, isTouchMem:boolean:=false; -- for testing of the beginning Touch
+ ------------------------------------- 
+   variable frame_cnt : integer:=0;  
+   variable speed_delay : integer:=0;
+  begin
+
+iRedge:if rising_edge(LCD_DCLK) then
+			 
+         ACK_Command <= '0';   -- we assign the default value to acknowledge of RDY
+  iCLRN: if CLRN = '0' then
+			  Command         := (others => '0');  -- the code of pressed key
+			  isRDYWaiting    := true;             -- we wait for RDY from IRDA module
+			  touchRecord     := TouchRecord_ZERO; -- unpacked touchCoordinates
+			  isTouchMem:=false;
+        isTouch:=false;
+        s_vStop <= '0'; -- default stop
+        s_morse_speed <= 5; -- default speed
+		  else -- if CLRN = '1' 
+		  
+		  touchRecord := to_TouchRecord(touchDataSlv); -- to_TouchRecord() is defined in TouchIRDApackV2.vhd
+			isTouch := touchRecord.Count > 0; -- is any touch
+
+      if (not isTouchMem and isTouch) then 
+               -- [Task A] toggle start/stop by touching center button
+               if inLimit(touchRecord.x1, BLINK_XLEFT, BLINK_SIZE) and inLimit(touchRecord.y1, BLINK_YTOP, BLINK_SIZE) then 
+                  s_vStop <= not s_vStop;
+               end if;
+               
+               -- [Task D] touch star areas to change speed
+                -- touch higher star to speed up
+                 if inLimit(touchRecord.x1, HSTAR_X0, IMG_W) and inLimit(touchRecord.y1, HSTAR_Y0, IMG_H) then
+                   if s_morse_speed < SPEED_MAX then s_morse_speed <= s_morse_speed + 1; end if;
+               end if;
+
+               -- lower star area speed down
+                 if inLimit(touchRecord.x1, LSTAR_X0, IMG_W) and inLimit(touchRecord.y1, LSTAR_Y0, IMG_H) then
+                   if s_morse_speed > SPEED_MIN then s_morse_speed <= s_morse_speed - 1; end if;
+               end if;
+               
+               -- [Task D] Direct Control by Touching Speed Bar
+                 if (inLimit(touchRecord.x1, SPEED_BAR_X0, SPEED_BAR_W) and inLimit(touchRecord.y1, SPEED_BAR_Y0, SPEED_BAR_H)) then
+                   -- direct speed bar control, from 30-285 X, 20-40 Y
+                   -- speed bar pos= (current X - start offset) / width per segment + 1
+                   -- at X=35 -> (35-30)/16 + 1 = 0 + 1 = speed 1
+                   -- at X=280 -> (280-30)/16 + 1 = 15 + 1 = speed 16
+                   s_morse_speed <= (touchRecord.x1 - SPEED_BAR_X0) / SPEED_BAR_TICK_PX + SPEED_MIN;
+           end if;
+			end if;
+           
+			isTouchMem:=isTouch; -- updating the last touch state memory
+
+       
+		  
+ 
+ -- The iFSM part is the two state Finite State Machine for processing RDY-ACK handshake protocol
+ 
+iFSM: case isRDYWaiting is
+		    ---------------------------------------------------
+			 when true=> -- waiting for RDY
+            iRDY: if RDY_command='1' then -- if RDY
+              
+              Command         := AddressCommand(7 downto 0); 
+              -- [Task A+D] IRDA remote: play/pause and speed control
+                iCommand :  case to_integer(unsigned(Command)) is 
+                     when 16#16# | 16#12# =>  s_vStop <= not s_vStop; -- Play/Power
+                    when 16#02#| 16#18#| 16#1B#| 16#1A# => -- speed up
+                      if s_morse_speed < SPEED_MAX then s_morse_speed <= s_morse_speed + 1; end if;
+                     when 16#01#| 16#14#| 16#1F#| 16#1E# => -- speed down
+                      if s_morse_speed > SPEED_MIN then s_morse_speed <= s_morse_speed - 1; end if;
+                     when others => null; 
+                  end case iCommand;
+				      isRDYWaiting   := false; -- now, we must acknowledge RDY receiving
+            end if iRDY;
+			 --------------------------------------------------	
+          when false=>  -- the confirmation of RDY
+            ACK_Command <= '1';  -- we confirm receiving RDY
+            
+				if RDY_command='0' then  -- our ACK was received
+				   isRDYWaiting:=true; end if; -- we return to waiting for the next RDY
+        -------------------------------------------------------------------------------
+		  end case iFSM; 
+			
+     end if iCLRN; 
+  
+	end if iRedge;
+ 
+  -- [Task B+D] frame update: morse scrolling with speed-based delay
+  iFrameUpdate:  if falling_edge(YEND_N) then 
+        commandStop <=  s_vStop; -- output the state to LCD over signal field
+        if CLRN = '0' then
+          s_morse_current_index <= 0; 
+          frame_cnt := 0;
+        else
+        if s_vStop = '0' then 
+            -- higher speed => smaller delay (speed 1: 33 frames[35-1*2=33], speed 16: 3 frames[35-16*2=3])
+            speed_delay := MORSE_FRAME_DELAY_BASE - (s_morse_speed * MORSE_FRAME_DELAY_SLOPE);
+            if speed_delay < MORSE_FRAME_DELAY_MIN then speed_delay := MORSE_FRAME_DELAY_MIN; end if;
+
+            if frame_cnt < speed_delay then
+                frame_cnt := frame_cnt + 1;
+            else
+                frame_cnt := 0;
+                
+                if  s_morse_current_index >= 63 then
+                    s_morse_current_index <= 0;
+                else
+                    s_morse_current_index <= s_morse_current_index + 1;
+                end if;
+            end if;
+            
+        else
+            
+            frame_cnt := 0;
+        end if;
+        end if;
+    end if iFrameUpdate;
+  end process;
+	 
+end architecture;

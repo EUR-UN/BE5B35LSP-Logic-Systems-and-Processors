@@ -1,0 +1,215 @@
+-------------------------------------------------------------
+-- CTU-FFE Prague, Dept. of Control Eng. [Richard Susta], Published under GNU General Public License
+-------------------------------------------------------------
+
+library ieee, work;
+use ieee.std_logic_1164.all; use ieee.numeric_std.all;  -- for integer and unsigned types
+use work.LCDpackV2.all;       -- its version 2.1 and higher
+use work.TouchIRDApackV2.all; --defined TouchDataSlv_t 
+use work.UIpack.all; 
+
+entity LCDlogicTask4 is
+    generic(IsTestbench:boolean:=FALSE); -- in testbench, we decrease frequency
+    port( touchCoordinates : in   TouchDataSlv_t := (others => '0'); -- packet with coordinates 
+         commandStop        : in  std_logic:='0'; -- '1' if stopped
+         xcolumn  : in  xy_t      := XY_ZERO; -- x-coordinate of pixel (column index)
+         yrow     : in  xy_t      := XY_ZERO; -- y-coordinate of pixel (row index)
+         XEND_N   : in  std_logic := '0'; -- '0' only when xcolumn=1023, otherwise '1', f=32227 Hz= 33e6/1024 
+         YEND_N   : in  std_logic := '0'; -- '0' only when yrow=524, otherwise '1', f=61.384 Hz = 33e6/(1024*525)
+         LCD_DE   : in  std_logic := '0'; -- DataEnable control signal of LCD controller
+         LCD_DCLK : in  std_logic := '0'; -- LCD data clock, exactly 33 MHz
+		 RGBcolor : out RGB_t:=BLACK;  -- RGB color of pixel
+         morse_in : in std_logic := '0';  -- Morse code input signal MORSE_OUT from UserInterfaceV2
+         morse_index_in : in integer range 0 to 63 := 0;  -- Morse code index from UserInterfaceV2
+         current_speed_in : in integer range 1 to 15 := 5  -- Morse code speed from UserInterfaceV2
+            );
+end entity;
+
+-- Basic LCD
+architecture rtl of LCDlogicTask4 is
+    -- signal blinkOnOff : boolean := false;   --
+    -- copy constants from Task 3
+   -- circle geometry
+   constant CX1 : integer := LCD_WIDTH / 2;
+   constant CY1 : integer := -180;
+   constant CX2 : integer := LCD_WIDTH / 2;
+   constant CY2 : integer := 640;
+   constant R   : integer := 480;
+
+   -- H_Star ROM (High star) 
+   constant IMG_W : integer := 143;  -- star width
+   constant IMG_H : integer := 144;  -- star height
+   constant HSTAR_X0 : integer := 600;  -- x position of higher star
+   constant HSTAR_Y0 : integer := 50;   -- y position of higher star
+   constant LSTAR_X0 : integer := 40;   -- x position of lower star
+   constant LSTAR_Y0 : integer := 280;  -- y position of lower star
+   
+   signal rom_addr : std_logic_vector(14 downto 0);
+   signal rom_q    : std_logic_vector(1 downto 0);
+
+    signal s_draw_index_vec : unsigned(5 downto 0); -- send input to MorseYWZ
+    signal s_draw_bit       : std_logic;            -- lookup result (1= white, 0= black)
+    signal s_ignore_stop    : std_logic;            -- ignore stop bit
+  begin -- architecture
+    -- H_Star ROM instance
+    HSTAR_ROM : entity work.H_Star
+      port map (
+         clock   => LCD_DCLK,
+         address => rom_addr,
+         q       => rom_q
+      );
+      -- =================================================================
+    -- Instance of MorseYWZ to get the pixel color for Morse code display
+    -- =================================================================
+    iMorseDrawer : entity work.MorseYWZ
+      port map (
+         X    => s_draw_index_vec, 
+         Y    => s_draw_bit,       
+         STOP => s_ignore_stop     
+      );
+    -- Process to calculate the draw index for Morse code based on xcolumn and morse_index_in
+    process(xcolumn, morse_index_in)
+        variable base_idx : integer;
+        variable final_idx : integer;
+    begin
+        -- Each symbol is 32 pixels wide
+        base_idx := to_integer(xcolumn) / 32; 
+        -- Add offset to achieve scrolling
+        final_idx := base_idx + morse_index_in;
+        -- Loop display
+        final_idx := final_idx mod 64; 
+        
+        s_draw_index_vec <= to_unsigned(final_idx, 6);
+    end process;
+
+	 LSPimage : process(xcolumn,yrow,touchCoordinates,commandStop,morse_in,morse_index_in,current_speed_in, rom_q, LCD_DE, s_draw_bit)
+    
+        variable RGB   : RGB_t     := BLACK; 
+        variable x, y  : integer   := 0; -- integer xcolumn and yrow
+        variable touchRecord                 : TouchRecord_t                     := TouchRecord_ZERO; -- Touch
+
+        --draw touch circles variables copied from task 3
+        variable dx1, dy1, dx2, dy2 : integer;
+        variable in1, in2 : boolean;
+        -- Star IMG variables
+        variable hstar_x, hstar_y : integer;
+        variable hstar_in : boolean;
+        variable lstar_x, lstar_y : integer;
+        variable lstar_in : boolean;
+        variable rel_x, rel_y : integer;
+
+     begin                               
+		  --------------------------------------------------------------------------------------------------------
+        x := to_integer(xcolumn);   y := to_integer(yrow);          -- convert unsigned to integers
+		  touchRecord := to_TouchRecord(touchCoordinates); -- to_TouchRecord() is defined in TouchIRDApackV2.vhd
+        RGB := BLACK;
+        ---------- Image from Task3 -------------------------
+        -- draw background circles
+        dx1 := x - CX1;
+        dy1 := y - CY1;
+        dx2 := x - CX2;
+        dy2 := y - CY2;
+        -- check inclusion in circles
+        in1 := (dx1*dx1 + dy1*dy1 <= R*R);
+        in2 := (dx2*dx2 + dy2*dy2 <= R*R);
+        -- set colors based on circle inclusion
+        if in1 and in2 then
+            RGB := C_MIDDLE;
+        elsif not (in1 and in2) and y<230 then
+            RGB := C_UPPER;
+        else
+            RGB := C_LOWER;
+        end if;
+        
+        ------------------------------------------------------------
+        -- Check both stars and determine which ROM address to read
+        hstar_x := x - HSTAR_X0;
+        hstar_y := y - HSTAR_Y0;
+        hstar_in := (hstar_x >= 0) and (hstar_x < IMG_W) and 
+                    (hstar_y >= 0) and (hstar_y < IMG_H);
+        
+        lstar_x := x - LSTAR_X0;
+        lstar_y := y - LSTAR_Y0;
+        lstar_in := (lstar_x >= 0) and (lstar_x < IMG_W) and 
+                    (lstar_y >= 0) and (lstar_y < IMG_H);
+        
+        -- Set ROM address
+        if hstar_in then
+            rom_addr <= std_logic_vector(to_unsigned(hstar_y * IMG_W + hstar_x, rom_addr'length));
+        elsif lstar_in then
+            -- Rotate L_Star 90 degrees clockwise: x' = y, y' = IMG_W-1-x
+            rom_addr <= std_logic_vector(to_unsigned((IMG_W - 1 - lstar_x) * IMG_W + lstar_y, rom_addr'length));
+        else
+            rom_addr <= (others => '0');
+        end if;
+
+        -- Apply star overlay (non-background color pixels only)
+        -- Transparent color code: "01" (light blue for H_Star, dark blue for L_Star after swap)
+        if (hstar_in or lstar_in) and rom_q /= "01" then
+            RGB := Star_Parse(rom_q, is_lower => lstar_in);
+        end if;
+
+-- A. Start/Stop Button with Icons
+if InLimit(x, BLINK_XLEFT, BLINK_SIZE) and InLimit(y, BLINK_YTOP, BLINK_SIZE) then
+    rel_x := x - BLINK_XLEFT;
+    rel_y := y - BLINK_YTOP;
+
+    -- background
+    if commandStop = '1' then 
+        RGB := GRAY;
+    else 
+        RGB := assignIf(morse_in = '1', YELLOW, VIOLET);
+    end if;
+
+    -- icon
+    if commandStop = '1' then
+        -- pause icon ||
+        if ((rel_x > 20 and rel_x < 28) or (rel_x > 36 and rel_x < 44)) then
+            if rel_y > 15 and rel_y < 49 then
+                RGB := RED;
+            end if;
+        end if;
+    else
+        -- play icon ▶
+        if rel_x > 20 and rel_x < 44 then
+            if (rel_y > (15 + (rel_x - 20)/2)) and
+               (rel_y < (49 - (rel_x - 20)/2)) then
+                RGB := GREEN;
+            end if;
+        end if;
+    end if;
+end if;
+
+        if (y>450 and y<500)  then
+            -- Display Morse code area
+            if s_draw_bit = '1' then
+                RGB := BLACK;
+            end if;
+        if x < 4 then RGB := RED; end if;
+          end if;
+            -- draw speed bar
+if (x >= 500) and (x < 700) and (y >= 20) and (y < 40) then
+    RGB := WHITE;
+    if (x - 500) < (current_speed_in * 10) then
+        RGB := GREEN;
+    end if;
+
+    -- ADD THIS
+    if ((x - 500) mod 13) = 0 then
+        RGB := BLACK;
+    end if;
+end if;
+
+		   ----- draw touch circles-------------------------------------------------------
+	     if touchRecord.Count>0 and (x-touchRecord.x1)**2+(y-touchRecord.y1)**2<TCIRCLE**2 then RGB:=RED; end if;
+	     if touchRecord.Count>1 and (x-touchRecord.x2)**2+(y-touchRecord.y2)**2<TCIRCLE**2 then RGB:=GREEN; end if;
+
+        if LCD_DE = '0' then RGB := BLACK; end if; -- blanking area( Data Enable low)
+        RGBcolor <= RGB;
+        ---------------------------------------------------------------------------------------------------------------    
+    end process;
+-----------------------------------------------------------------------------------------------------------------
+
+
+end architecture;
+
